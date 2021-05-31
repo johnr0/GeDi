@@ -1,10 +1,22 @@
 
 
 
-![GeDi logo](https://github.com/salesforce/GeDi/blob/master/gedi_logo_small.png)
+<!-- ![GeDi logo](https://github.com/salesforce/GeDi/blob/master/gedi_logo_small.png) -->
 --------------------------------------------------------------------------------
 
-Official implementation of [GeDi: Generative Discriminator Guided Sequence Generation](https://arxiv.org/abs/2009.06367)
+TaleBrush Backend.
+
+Forked from [GeDi: Generative Discriminator Guided Sequence Generation](https://arxiv.org/abs/2009.06367)
+
+We use GeDi with the secondary code as the level of the protagonist's fortune (0~100).
+
+## TODO 
+* Parse out protagonist for the movie summary dataset.
+* Collect annotations for the protagonist's fortune.
+* Improve sequential generation?
+
+
+Below is ReadMe From GeDI:
 
 Blogpost [here](https://blog.einstein.ai/gedi/)
 

@@ -291,7 +291,7 @@ def train(args, train_dataset, model, tokenizer):
                 else:
                     seq_batched = torch.cat((seq_a,seq_b),dim=0)
                 # John: To see how the input is configured...
-                print(seq_batched)
+                # print(seq_batched)
                 #want to compute LM loss here so feeding inputs as labels
                 inputs = {"input_ids": seq_batched, "attention_mask": None, "labels": seq_batched}
 
@@ -322,9 +322,9 @@ def train(args, train_dataset, model, tokenizer):
 
             if args.threeway:
                 loss_a,loss_b,loss_c=torch.split(losses, bsz, dim=0)
-                loss_a*=loss_mask
-                loss_b*=loss_mask
-                loss_c*=loss_mask
+                loss_a=loss_a*loss_mask
+                loss_b=loss_b*loss_mask
+                loss_c=loss_c*loss_mask
 
                 #weights all batches equally even if sum of seqlens vary accross training iterations
                 if False:
@@ -354,8 +354,10 @@ def train(args, train_dataset, model, tokenizer):
             else:
                 loss_a,loss_b=torch.split(losses, bsz, dim=0)
 
-                loss_a*=loss_mask
-                loss_b*=loss_mask
+                loss_a=loss_a*loss_mask
+                loss_b=loss_b*loss_mask
+                # loss_a*=loss_mask
+                # loss_b*=loss_mask
                 if False:
                     gen_loss_a = (batch[3]==0).to(torch.float16).unsqueeze(1)*loss_a/loss_lengths
                     gen_loss_b = (batch[3]==1).to(torch.float16).unsqueeze(1)*loss_b/loss_lengths
@@ -577,9 +579,9 @@ def evaluate(args, model, tokenizer, prefix=""):
 
                 if args.threeway:
                     loss_a,loss_b,loss_c=torch.split(losses, bsz, dim=0)
-                    loss_a*=loss_mask
-                    loss_b*=loss_mask
-                    loss_c*=loss_mask
+                    loss_a=loss_a*loss_mask
+                    loss_b=loss_b*loss_mask
+                    loss_c=loss_c*loss_mask
 
                     #weights all batches equally even if sum of seqlens vary accross training iterations
                     if False:
@@ -604,8 +606,8 @@ def evaluate(args, model, tokenizer, prefix=""):
                 else:
                     loss_a,loss_b=torch.split(losses, bsz, dim=0)
 
-                    loss_a*=loss_mask
-                    loss_b*=loss_mask
+                    loss_a=loss_a*loss_mask
+                    loss_b=loss_b*loss_mask
 
                     #weights all batches equally even if sum of seqlens vary accross training iterations
                     if False:
@@ -717,8 +719,13 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
     processor = processors[task]()
     output_mode = output_modes[task]
     # Load data features from cache or dataset file
+    try:
+        import nsml
+        d_dir = nsml.DATASET_PATH
+    except ImportError:
+        d_dir = args.data_dir
     cached_features_file = os.path.join(
-        args.data_dir,
+        d_dir,
         "cached_{}_{}_{}_{}".format(
             "dev" if evaluate else "train",
             list(filter(None, args.model_name_or_path.split("/"))).pop(),
@@ -730,13 +737,13 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
         logger.info("Loading features from cached file %s", cached_features_file)
         features = torch.load(cached_features_file)
     else:
-        logger.info("Creating features from dataset file at %s", args.data_dir)
+        logger.info("Creating features from dataset file at %s", d_dir)
         label_list = processor.get_labels()
         if task in ["mnli", "mnli-mm"] and args.model_type in ["roberta", "xlmroberta"]:
             # HACK(label indices are swapped in RoBERTa pretrained model)
             label_list[1], label_list[2] = label_list[2], label_list[1]
         examples = (
-            processor.get_dev_examples(args.data_dir) if evaluate else processor.get_train_examples(args.data_dir)
+            processor.get_dev_examples(d_dir) if evaluate else processor.get_train_examples(d_dir)
         )
 
         if args.model_type == 'gpt2': #setting pad token for GPT-2
